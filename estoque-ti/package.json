@@ -1,0 +1,15 @@
+{
+  "name": "estoque-ti",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Controle de equipamentos de TI com Supabase Auth, RLS e histórico automático.",
+  "scripts": {
+    "test": "node --test tests/core.test.cjs tests/app.test.cjs",
+    "test:db": "node tests/database.test.cjs"
+  },
+  "engines": { "node": ">=20" },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14",
+    "jsdom": "26.1.0"
+  }
+}

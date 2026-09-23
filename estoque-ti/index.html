@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Inventário e movimentações dos equipamentos de TI.">
+  <meta name="color-scheme" content="light dark">
+  <title>Estoque TI · Inventário</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
+  <script defer src="config.js"></script>
+  <script defer src="core.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="m12 3 9 5v8l-9 5-9-5V8l9-5Zm0 9 9-4M12 12 3 8m9 4v9M7.5 5.5l9 5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 11a9 9 0 1 1 2 7M3 4v7h7m2-5v6l4 2"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11Z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14v6Z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M12 16v5m-5 0h10"/></symbol>
+    <symbol id="i-tool" viewBox="0 0 24 24"><path d="M14 6a5 5 0 0 0-6 6l-6 6 4 4 6-6a5 5 0 0 0 6-6l-4 2-2-2 2-4Z"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 8a9 9 0 0 0-16 0m16-5v5h-5M4 16a9 9 0 0 0 16 0M4 21v-5h5"/></symbol>
+  </defs></svg>
+  <a href="#inventory" class="skip-link">Ir para o inventário</a>
+  <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+  <noscript><p class="notice">Ative o JavaScript para acessar o sistema.</p></noscript>
+
+  <section id="login-screen" class="login-screen" aria-labelledby="login-title">
+    <div class="login-story">
+      <a class="brand" href="./"><span class="brand-mark"><svg><use href="#i-box"/></svg></span> estoque<span class="brand-ti">TI</span></a>
+      <div><p class="eyebrow">CONTROLE QUE SIMPLIFICA</p><h1>Seu inventário.<br>Em boas mãos.</h1><p class="story-copy">Equipamentos, responsáveis e movimentações em um só lugar. Mais organização para o dia a dia da sua equipe.</p>
+      <div class="story-feature"><svg><use href="#i-monitor"/></svg><span>Visibilidade de cada equipamento</span></div>
+      <div class="story-feature"><svg><use href="#i-history"/></svg><span>Histórico de todas as movimentações</span></div></div>
+      <small>Gestão de equipamentos de tecnologia</small>
+    </div>
+    <div class="login-form-area"><div class="login-box">
+      <span class="section-label">BEM-VINDO DE VOLTA</span>
+      <h2 id="login-title">Acesse seu estoque</h2><p class="muted">Entre com sua conta para continuar.</p>
+      <form id="login-form">
+        <div class="input-group"><label for="login-email">E-mail</label><input id="login-email" name="email" type="email" autocomplete="username" placeholder="voce@empresa.com" required maxlength="254"></div>
+        <div class="input-group"><label for="login-password">Senha</label><input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Sua senha" required></div>
+        <p id="login-error" class="inline-error" role="alert" hidden></p>
+        <button id="btn-login" class="btn-primary wide" type="submit" disabled>Conectando…</button>
+      </form>
+      <p class="login-help">Precisa de acesso? Fale com o administrador do estoque.</p>
+    </div></div>
+  </section>
+
+  <section id="app-screen" hidden>
+    <header class="app-header"><div class="header-inner">
+      <a class="brand" href="./"><span class="brand-mark"><svg><use href="#i-box"/></svg></span> estoque<span class="brand-ti">TI</span></a>
+      <span class="header-section">Inventário de equipamentos</span>
+      <div class="header-right"><span id="user-display" class="user-display"></span><button id="btn-darkmode" class="btn-icon" aria-label="Ativar modo escuro" title="Alternar tema" aria-pressed="false"><svg><use href="#i-moon"/></svg></button><button id="btn-logout" class="btn-secondary">Sair</button></div>
+    </div></header>
+    <main class="workspace" id="inventory" tabindex="-1">
+      <div class="page-heading"><div><p class="eyebrow">VISÃO GERAL</p><h1>Controle de estoque</h1><p class="muted">Cada equipamento no lugar certo.</p></div><div class="heading-actions"><button id="btn-historico" class="btn-secondary"><svg><use href="#i-history"/></svg>Histórico</button><button id="btn-export" class="btn-secondary"><svg><use href="#i-download"/></svg>Exportar CSV</button><a class="btn-primary mobile-add" href="#add-panel"><svg><use href="#i-plus"/></svg>Novo item</a></div></div>
+      <section class="cards" aria-label="Resumo do estoque">
+        <article class="card"><span class="card-icon neutral"><svg><use href="#i-box"/></svg></span><p>Total de itens</p><strong id="total-count">—</strong><small>Equipamentos cadastrados</small></article>
+        <article class="card"><span class="card-icon green"><svg><use href="#i-check"/></svg></span><p>Disponíveis</p><strong id="disponivel-count">—</strong><small>Prontos para uso</small></article>
+        <article class="card"><span class="card-icon blue"><svg><use href="#i-monitor"/></svg></span><p>Em uso</p><strong id="em-uso-count">—</strong><small>Em operação na equipe</small></article>
+        <article class="card"><span class="card-icon amber"><svg><use href="#i-tool"/></svg></span><p>Manutenção</p><strong id="manutencao-count">—</strong><small>Em revisão ou reparo</small></article>
+        <article class="card"><span class="card-icon red"><svg><use href="#i-trash"/></svg></span><p>Descarte</p><strong id="descarte-count">—</strong><small>Fora de operação</small></article>
+      </section>
+      <div class="inventory-layout">
+        <section class="panel inventory-panel" aria-labelledby="inventory-title">
+          <div class="panel-heading"><div><h2 id="inventory-title">Equipamentos</h2><p id="results-summary" class="muted" aria-live="polite">Carregando inventário…</p></div><button id="btn-refresh" class="btn-icon" title="Atualizar estoque" aria-label="Atualizar estoque"><svg><use href="#i-refresh"/></svg></button></div>
+          <div class="toolbar"><div class="search"><svg><use href="#i-search"/></svg><input id="search" type="search" aria-label="Pesquisar equipamentos" placeholder="Busque patrimônio, nome ou responsável" maxlength="200"></div><div class="filters"><select id="filter-categoria" aria-label="Filtrar por categoria"></select><select id="filter-status" aria-label="Filtrar por status"></select><button id="btn-clear-filters" class="btn-text">Limpar</button></div></div>
+          <p id="data-error" class="inline-error data-error" role="alert" hidden></p>
+          <div class="table-responsive" tabindex="0" role="region" aria-label="Tabela de equipamentos, role horizontalmente para ver todas as colunas">
+            <table><caption class="sr-only">Inventário de equipamentos de TI</caption><thead><tr>
+              <th scope="col" data-field="patrimonio" aria-sort="none"><button class="sort" data-field="patrimonio">Patrimônio <span aria-hidden="true">↕</span></button></th>
+              <th scope="col" data-field="nome" aria-sort="none"><button class="sort" data-field="nome">Equipamento <span aria-hidden="true">↕</span></button></th>
+              <th scope="col" data-field="categoria" aria-sort="none"><button class="sort" data-field="categoria">Categoria <span aria-hidden="true">↕</span></button></th>
+              <th scope="col" data-field="status" aria-sort="none"><button class="sort" data-field="status">Status <span aria-hidden="true">↕</span></button></th>
+              <th scope="col" data-field="responsavel" aria-sort="none"><button class="sort" data-field="responsavel">Responsável <span aria-hidden="true">↕</span></button></th><th scope="col">Ações</th>
+            </tr></thead><tbody id="table-body"></tbody></table>
+          </div>
+          <nav class="pagination" aria-label="Paginação do inventário"><span id="page-info">Página 1 de 1</span><div><button id="btn-prev" class="btn-secondary" disabled>← Anterior</button><button id="btn-next" class="btn-secondary" disabled>Próxima →</button></div></nav>
+        </section>
+        <aside id="add-panel" class="panel add-panel" aria-labelledby="add-title"><div class="panel-heading"><div><span class="section-label">CADASTRO</span><h2 id="add-title">Novo equipamento</h2><p class="muted">Adicione um item ao inventário.</p></div></div>
+          <form id="add-form" class="equipment-form">
+            <div class="input-group"><label for="patrimonio">Patrimônio <span>*</span></label><input id="patrimonio" required inputmode="numeric" minlength="5" maxlength="7" pattern="[0-9]{5,7}" placeholder="Ex.: 0012345" aria-describedby="patrimonio-help"><small id="patrimonio-help">De 5 a 7 números. Zeros iniciais são mantidos.</small></div>
+            <div class="input-group"><label for="nome">Nome do equipamento <span>*</span></label><input id="nome" required maxlength="150" placeholder="Ex.: Notebook Dell Latitude"></div>
+            <div class="form-row"><div class="input-group"><label for="categoria">Categoria <span>*</span></label><select id="categoria" required></select></div><div class="input-group"><label for="status">Status <span>*</span></label><select id="status" required></select></div></div>
+            <div class="input-group"><label for="responsavel">Responsável</label><input id="responsavel" maxlength="150" placeholder="Nome de quem utiliza"></div>
+            <div class="input-group"><label for="descricao">Descrição <span class="optional">opcional</span></label><textarea id="descricao" rows="3" maxlength="2000" placeholder="Modelo, configuração ou observações"></textarea></div>
+            <button class="btn-primary wide" type="submit"><svg><use href="#i-plus"/></svg>Salvar equipamento</button>
+          </form>
+        </aside>
+      </div>
+      <footer class="workspace-footer"><span>Estoque TI · Organização para sua equipe</span><span id="sync-status" role="status">Aguardando sincronização</span></footer>
+    </main>
+  </section>
+
+  <dialog id="edit-modal" aria-labelledby="edit-title"><div class="modal-header"><div><span class="section-label">EQUIPAMENTO</span><h2 id="edit-title">Editar equipamento</h2></div><button class="btn-icon" data-close="edit-modal" aria-label="Fechar edição">✕</button></div>
+    <form id="edit-form" class="equipment-form">
+      <input id="edit-id" type="hidden">
+      <div class="input-group"><label for="edit-patrimonio">Patrimônio *</label><input id="edit-patrimonio" required inputmode="numeric" minlength="5" maxlength="7" pattern="[0-9]{5,7}"></div>
+      <div class="input-group"><label for="edit-nome">Nome do equipamento *</label><input id="edit-nome" required maxlength="150"></div>
+      <div class="form-row"><div class="input-group"><label for="edit-categoria">Categoria *</label><select id="edit-categoria" required></select></div><div class="input-group"><label for="edit-status">Status *</label><select id="edit-status" required></select></div></div>
+      <div class="input-group"><label for="edit-responsavel">Responsável</label><input id="edit-responsavel" maxlength="150"></div>
+      <div class="input-group"><label for="edit-descricao">Descrição</label><textarea id="edit-descricao" rows="3" maxlength="2000"></textarea></div>
+      <div class="modal-actions"><button type="button" class="btn-secondary" data-close="edit-modal">Cancelar</button><button type="submit" class="btn-primary">Salvar alterações</button></div>
+    </form>
+  </dialog>
+  <dialog id="historico-modal" class="dialog-large" aria-labelledby="history-title"><div class="modal-header"><div><span class="section-label">RASTREABILIDADE</span><h2 id="history-title">Histórico de movimentações</h2></div><button class="btn-icon" data-close="historico-modal" aria-label="Fechar histórico">✕</button></div>
+    <div class="search"><svg><use href="#i-search"/></svg><input id="historico-filtro" type="search" placeholder="Pesquisar neste histórico" aria-label="Pesquisar no histórico"></div><p id="history-summary" class="muted" aria-live="polite"></p>
+    <div class="table-responsive" tabindex="0" role="region" aria-label="Tabela de histórico"><table><caption class="sr-only">Movimentações registradas no banco de dados</caption><thead><tr><th>Data</th><th>Ação</th><th>Patrimônio</th><th>Campo</th><th>Antes</th><th>Depois</th><th>Usuário</th></tr></thead><tbody id="historico-body"></tbody></table></div>
+    <nav class="pagination" aria-label="Paginação do histórico"><span id="history-page-info"></span><div><button id="history-prev" class="btn-secondary">← Anterior</button><button id="history-next" class="btn-secondary">Próxima →</button></div></nav>
+  </dialog>
+  <dialog id="confirm-modal" class="dialog-confirm" aria-labelledby="confirm-title"><span class="card-icon red"><svg><use href="#i-trash"/></svg></span><h2 id="confirm-title">Excluir equipamento?</h2><p class="muted">O item será removido do estoque. Seu histórico de movimentações será preservado.</p><strong id="confirm-item-nome"></strong><div class="modal-actions"><button id="btn-confirm-cancelar" class="btn-secondary" data-close="confirm-modal" autofocus>Cancelar</button><button id="btn-confirm-excluir" class="btn-danger">Excluir equipamento</button></div></dialog>
+</body>
+</html>
